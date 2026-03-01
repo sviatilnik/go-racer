@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/sviatilnik/go-racer/internal/config"
+	"github.com/sviatilnik/go-racer/internal/race"
 	"github.com/sviatilnik/go-racer/internal/utils"
 )
 
@@ -28,6 +30,11 @@ func main() {
 	}
 
 	fmt.Printf("🏁 Стартуем гонку для %d URL с таймаутом %fs \n", len(urls), conf.GetTimeout().Seconds())
+
+	ctx, cancel := context.WithTimeout(context.Background(), conf.GetTimeout())
+	defer cancel()
+
+	race.NewRace(ctx, urls).Start()
 }
 
 func getURLs() []string {
