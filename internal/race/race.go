@@ -13,23 +13,23 @@ type Race struct {
 	links []string
 }
 
-func NewRace(ctx context.Context, URLs []string) *Race {
+func NewRace(ctx context.Context, urls []string) *Race {
 	return &Race{
 		res:   &result{},
 		ctx:   ctx,
-		links: URLs,
+		links: urls,
 	}
 }
 
-func (race *Race) Start() {
-	results := make(chan *resultItem, len(race.links))
+func (racer *Race) Start() {
+	results := make(chan *resultItem, len(racer.links))
 
-	workersContext, workersContextCancel := context.WithCancel(race.ctx)
+	workersContext, workersContextCancel := context.WithCancel(racer.ctx)
 	var wg sync.WaitGroup
 
-	for _, link := range race.links {
+	for _, link := range racer.links {
 		wg.Go(func() {
-			race.worker(workersContext, link, results)
+			racer.worker(workersContext, link, results)
 		})
 	}
 
@@ -40,24 +40,24 @@ func (race *Race) Start() {
 
 	for {
 		select {
-		case <-race.ctx.Done():
+		case <-racer.ctx.Done():
 			workersContextCancel()
 
 			for r := range results {
-				race.res.Items = append(race.res.Items, r)
+				racer.res.Items = append(racer.res.Items, r)
 			}
 
-			race.res.print()
+			racer.res.print()
 			return
 		case res := <-results:
-			if !race.res.HasWinner {
+			if !racer.res.HasWinner {
 				res.IsWinner = true
-				race.res.HasWinner = true
+				racer.res.HasWinner = true
 			}
 
-			race.res.Items = append(race.res.Items, res)
-			if len(race.res.Items) == len(race.links) {
-				race.res.print()
+			racer.res.Items = append(racer.res.Items, res)
+			if len(racer.res.Items) == len(racer.links) {
+				racer.res.print()
 
 				workersContextCancel()
 				return
@@ -66,8 +66,11 @@ func (race *Race) Start() {
 	}
 }
 
-func (r *Race) worker(ctx context.Context, link string, results chan<- *resultItem) {
+var defaultHTTPClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
+func (racer *Race) worker(ctx context.Context, link string, results chan<- *resultItem) {
 	if ctx.Err() != nil {
 		results <- &resultItem{
 			IsWinner: false,
@@ -94,7 +97,7 @@ func (r *Race) worker(ctx context.Context, link string, results chan<- *resultIt
 			return
 		}
 
-		_, err = http.DefaultClient.Do(req)
+		_, err = defaultHTTPClient.Do(req)
 
 		end := time.Now()
 

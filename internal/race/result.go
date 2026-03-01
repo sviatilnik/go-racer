@@ -28,13 +28,13 @@ func (r *result) print() {
 func (r *result) printWithWinner() {
 	for _, item := range r.Items {
 		if item.IsWinner {
-			fmt.Printf("🚀 Самый быстрый: %s (%d ms) \n", item.URL, item.Time.Milliseconds())
+			fmt.Printf("🚀 Самый быстрый: %s (%d ms)\n", item.URL, item.Time.Milliseconds())
 		}
 	}
-	fmt.Println("Остальные результаты:: ")
+	fmt.Println("Остальные результаты: ")
 	for _, item := range r.Items {
 		if !item.IsWinner {
-			fmt.Printf("\t✓ %s (%d ms) \n", item.URL, item.Time.Milliseconds())
+			fmt.Printf("\t✓ %s (%d ms)\n", item.URL, item.Time.Milliseconds())
 		}
 	}
 }
@@ -44,6 +44,10 @@ func (r *result) printWithoutWinner() {
 	fmt.Println("Ошибки: ")
 
 	for _, item := range r.Items {
-		fmt.Printf("\t ✗ %s : %s\n", item.URL, item.Err.Error())
+		errStr := "неизвестно"
+		if item.Err != nil {
+			errStr = item.Err.Error()
+		}
+		fmt.Printf("\t ✗ %s : %s\n", item.URL, errStr)
 	}
 }

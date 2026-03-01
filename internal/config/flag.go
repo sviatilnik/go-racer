@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"os"
 	"time"
 )
 
@@ -14,20 +13,20 @@ func NewFlagConfig() *FlagConfig {
 	return &FlagConfig{}
 }
 
-func (c *FlagConfig) Init() error {
-
+func (c *FlagConfig) Init(args []string) ([]string, error) {
 	set := flag.NewFlagSet("racer", flag.ContinueOnError)
 	timeoutStr := set.String("timeout", "5s", "Race timeout (default - 5s). Example values: 5s, 1m, 2h")
-	set.Parse(os.Args[1:])
+	if err := set.Parse(args); err != nil {
+		return nil, err
+	}
 
 	timeout, err := time.ParseDuration(*timeoutStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	c.timeout = timeout
-
-	return nil
+	return set.Args(), nil
 }
 
 func (c *FlagConfig) GetTimeout() time.Duration {
